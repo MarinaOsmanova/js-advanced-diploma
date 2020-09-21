@@ -1,6 +1,18 @@
 export function calcTileType(index, boardSize) {
-  // TODO: write logic here
-  return 'center';
+  let tileType = '';
+  const row = Math.floor(index / boardSize);
+  const col = index % boardSize;
+  if (row === 0) {
+    tileType = 'top';
+  } else if (row === boardSize - 1) {
+    tileType = 'bottom';
+  }
+  if (col === 0) {
+    tileType += `${tileType ? '-' : ''}left`;
+  } else if (col === boardSize - 1) {
+    tileType += `${tileType ? '-' : ''}right`;
+  }
+  return tileType || 'center';
 }
 
 export function calcHealthLevel(health) {
