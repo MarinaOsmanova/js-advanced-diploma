@@ -197,11 +197,36 @@ export default class GamePlay {
   }
 
   showCellTooltip(message, index) {
-    this.cells[index].title = message;
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.innerHTML = message;
+    this.cells[index].insertAdjacentElement('beforeEnd', tooltip);
+    const cellRect = this.cells[index].getBoundingClientRect();
+    const cellSize = cellRect.width;
+    const tooltipRect = tooltip.getBoundingClientRect();
+    let top = 0;
+    let left = 0;
+    const row = Math.floor(index / this.boardSize);
+    const col = index % this.boardSize;
+    if (col < this.boardSize / 2) {
+      left = Math.floor((2 * cellSize) / 3);
+    } else {
+      left = Math.floor(cellSize / 3) - tooltipRect.width;
+    }
+    if (row < this.boardSize / 2) {
+      top = Math.floor((2 * cellSize) / 3);
+    } else {
+      top = Math.floor(cellSize / 3) - tooltipRect.height;
+    }
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
   }
 
   hideCellTooltip(index) {
-    this.cells[index].title = '';
+    const tooltip = this.cells[index].querySelector('.tooltip');
+    if (tooltip) {
+      tooltip.remove();
+    }
   }
 
   showDamage(index, damage) {

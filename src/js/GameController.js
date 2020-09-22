@@ -12,7 +12,8 @@ export default class GameController {
 
   init() {
     // TODO: add event listeners to gamePlay events
-
+    this.gamePlay.addCellEnterListener((index) => { this.onCellEnter(index); });
+    this.gamePlay.addCellLeaveListener((index) => { this.onCellLeave(index); });
 
     // TODO: load saved stated from stateService
     try {
@@ -33,11 +34,14 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    // TODO: react to mouse enter
+    const character = this.gameState.team.getCharacterInCell(index);
+    if (character) {
+      this.gamePlay.showCellTooltip(character.infoString(), index);
+    }
   }
 
   onCellLeave(index) {
-    // TODO: react to mouse leave
+    this.gamePlay.hideCellTooltip(index);
   }
 
   newGame() {

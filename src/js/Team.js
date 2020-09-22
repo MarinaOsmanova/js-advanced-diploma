@@ -45,4 +45,14 @@ export default class Team {
   levelUp() {
 
   }
+
+  getCharacterInCell(position, gamerType = null) {
+    const characters = (gamerType === null) ? this.getAllCharacters() : this.characters[gamerType];
+    for (let i = 0; i < characters.length; i += 1) {
+      if (characters[i].position === position) {
+        return characters[i].character;
+      }
+    }
+    return null;
+  }
 }

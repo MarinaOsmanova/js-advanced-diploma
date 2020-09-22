@@ -1,5 +1,3 @@
-import Bowman from './Characters/Bowman';
-
 /**
  * Generates random characters
  *

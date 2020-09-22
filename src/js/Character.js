@@ -9,4 +9,8 @@ export default class Character {
     this.health = 50;
     this.type = type;
   }
+
+  infoString() {
+    return `<span class="level"></span>${this.level} <span class="attack"></span>${this.attack} <span class="defence"></span>${this.defence} <span class="health"></span>${this.health}`;
+  }
 }
