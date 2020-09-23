@@ -1,7 +1,8 @@
 import Character from './Character';
+import { distance } from './utils';
 
 export default class PositionedCharacter {
-  constructor(character, position) {
+  constructor(character, position, gamerType) {
     if (!(character instanceof Character)) {
       throw new Error('character must be instance of Character or its children');
     }
@@ -12,5 +13,16 @@ export default class PositionedCharacter {
 
     this.character = character;
     this.position = position;
+    this.gamerType = gamerType;
+  }
+
+  canAttackPosition(index, boardSize) {
+    return this.position !== index
+      && this.character.attack_range >= distance(this.position, index, boardSize);
+  }
+
+  canMoveToPosition(index, boardSize) {
+    return this.position !== index
+      && this.character.move_range >= distance(this.position, index, boardSize);
   }
 }

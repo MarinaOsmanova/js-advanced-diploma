@@ -8,6 +8,8 @@ export default class Character {
     this.defence = 0;
     this.health = 50;
     this.type = type;
+    this.attack_range = 0;
+    this.move_range = 0;
   }
 
   infoString() {

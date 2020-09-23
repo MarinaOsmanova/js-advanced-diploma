@@ -1,7 +1,16 @@
+function coordinates(index, boardSize) {
+  return [Math.floor(index / boardSize), index % boardSize];
+}
+
+export function distance(index1, index2, boardSize) {
+  const [row1, col1] = coordinates(index1, boardSize);
+  const [row2, col2] = coordinates(index2, boardSize);
+  return Math.max(Math.abs(row2 - row1), Math.abs(col2 - col1));
+}
+
 export function calcTileType(index, boardSize) {
   let tileType = '';
-  const row = Math.floor(index / boardSize);
-  const col = index % boardSize;
+  const [row, col] = coordinates(index, boardSize);
   if (row === 0) {
     tileType = 'top';
   } else if (row === boardSize - 1) {
