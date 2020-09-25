@@ -43,7 +43,11 @@ export default class Team {
   }
 
   levelUp() {
-
+    // Повышение уровня у ВСЕХ оставшихся персонажей.
+    // Хотя по правилам игры, останутся только персонажи игрока
+    this.getAllCharacters().forEach((unit) => {
+      unit.character.levelUp();
+    });
   }
 
   getCharacterInCell(position, gamerType = null) {
@@ -54,5 +58,30 @@ export default class Team {
       }
     }
     return null;
+  }
+
+  attack(attacker, target) {
+    const attackValue = attacker.character.attack;
+    const targetCharacter = target.character;
+    const damage = targetCharacter.setDamage(attackValue);
+    if (targetCharacter.health === 0) {
+      this.removeCharacter(target);
+    }
+    return damage;
+  }
+
+  removeCharacter(character) {
+    const { position } = character;
+    const characters = this.characters[character.gamerType];
+    this.characters[character.gamerType] = characters.filter((e) => e.position !== position);
+  }
+
+  getSumHealth(gamerType) {
+    const characters = this.characters[gamerType];
+    let balls = 0;
+    characters.forEach((unit) => {
+      balls += unit.character.health;
+    });
+    return balls;
   }
 }

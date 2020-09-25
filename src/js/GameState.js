@@ -10,4 +10,13 @@ export default class GameState {
       this[key] = object[key];
     }
   }
+
+  addBalls(balls) {
+    this.currentBalls += balls;
+    if (typeof(this.maxBalls) === 'undefined') {
+      this.maxBalls = balls;
+    } else if (this.currentBalls > this.maxBalls) {
+      this.maxBalls = this.currentBalls;
+    }
+  }
 }

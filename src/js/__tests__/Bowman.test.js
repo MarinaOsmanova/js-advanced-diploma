@@ -7,8 +7,8 @@ test('An instance of the Bowman class is supplied with the correct fields', () =
   expect(character.attack).toEqual(25);
   expect(character.defence).toEqual(25);
   expect(character.health).toEqual(50);
-  expect(character.attack_range).toEqual(2);
-  expect(character.move_range).toEqual(2);
+  expect(character.attackRange).toEqual(2);
+  expect(character.moveRange).toEqual(2);
 });
 
 test('infoString returns the correct description', () => {

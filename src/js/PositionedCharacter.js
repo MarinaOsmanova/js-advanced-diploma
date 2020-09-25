@@ -18,11 +18,11 @@ export default class PositionedCharacter {
 
   canAttackPosition(index, boardSize) {
     return this.position !== index
-      && this.character.attack_range >= distance(this.position, index, boardSize);
+      && this.character.attackRange >= distance(this.position, index, boardSize);
   }
 
   canMoveToPosition(index, boardSize) {
     return this.position !== index
-      && this.character.move_range >= distance(this.position, index, boardSize);
+      && this.character.moveRange >= distance(this.position, index, boardSize);
   }
 }

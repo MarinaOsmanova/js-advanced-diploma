@@ -66,16 +66,15 @@ export default class Levels {
     return this.getLevelSettings(this.currentLevel);
   }
 
-  next() {
+  nextLevel() {
     if (this.currentLevel === null) {
       this.currentLevel = 0;
+      return 0;
     }
+    this.currentLevel += 1;
     if (this.currentLevel < this.levels.length) {
-      return {
-        done: false,
-        value: this.getLevelSettings(this.currentLevel),
-      };
+      return this.currentLevel;
     }
-    return { done: true };
+    return null;
   }
 }

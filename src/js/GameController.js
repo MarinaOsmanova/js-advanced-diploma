@@ -4,52 +4,51 @@ import generateTeam from './generators';
 import Team from './Team';
 import GamePlay from './GamePlay';
 import cursors from './cursors';
+import ComputerAI from './ComputerAI';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
     this.levels = new Levels();
+    this.computerAI = new ComputerAI();
   }
 
   init() {
-    // TODO: add event listeners to gamePlay events
     this.gamePlay.addCellEnterListener((index) => { this.onCellEnter(index); });
     this.gamePlay.addCellLeaveListener((index) => { this.onCellLeave(index); });
     this.gamePlay.addCellClickListener((index) => { this.onCellClick(index); });
+    this.gamePlay.addNewGameListener(() => { this.newGame(); });
 
-    // TODO: load saved stated from stateService
+    // load saved stated from stateService
     try {
       this.gameState = GameState.from(this.stateService.load());
       this.levels.setLevelIndex(this.gameState.currentLevelIndex);
     } catch (e) {
-      alert('Не удалось загрузить сохранённую игру');
+      this.newGame();
     }
-    this.newGame();
-    console.log(this.gameState);
-
-    this.gamePlay.drawUi(this.levels.current().theme);
-    this.gamePlay.redrawPositions(this.gameState.team.getAllCharacters());
   }
 
   onCellClick(index) {
+    if (this.gameState.currentPlayer !== HUMAN) {
+      return;
+    }
     const [character, currentCharacter] = [
       this.gameState.team.getCharacterInCell(index),
       this.gameState.currentCharacter,
     ];
-    if (currentCharacter && !character && currentCharacter.canMoveToPosition(index, this.gamePlay.boardSize)) {
-      // перемещение выделенного персонажа
-      this.gamePlay.deselectCell(currentCharacter.position);
-      this.gamePlay.deselectCell(index);
-      currentCharacter.position = index;
-      this.gameState.currentCharacter = null;
-      this.gamePlay.redrawPositions(this.gameState.team.getAllCharacters());
-      return;
-    }
-
-
-    if (!character) {
-      GamePlay.showError('Здесь нет вашего воина');
+    if (currentCharacter && !character) {
+      if (currentCharacter.canMoveToPosition(index, this.gamePlay.boardSize)) {
+        // перемещение выделенного персонажа
+        this.gamePlay.deselectCell(currentCharacter.position);
+        this.gamePlay.deselectCell(index);
+        currentCharacter.position = index;
+        this.gameState.currentCharacter = null;
+        this.redrawPositions();
+        this.setComputerAction();
+      } else {
+        GamePlay.showError('Ваш воин не может сюда дойти');
+      }
       return;
     }
     if (character && character.gamerType === HUMAN) {
@@ -63,10 +62,42 @@ export default class GameController {
       }
       this.gameState.currentCharacter = character;
       this.gamePlay.selectCell(index);
+      return;
+    }
+    if (character && currentCharacter) {
+      // клик по вражескому персонажу (клик по своему обработан выше), и есть выделенный персонаж
+      if (currentCharacter.canAttackPosition(index, this.gamePlay.boardSize)) {
+        const damage = this.gameState.team.attack(currentCharacter, character);
+        const damageAnimation = this.gamePlay.showDamage(index, damage);
+        this.gameState.currentPlayer = COMPUTER;
+        this.gamePlay.setCursor(cursors.auto);
+        damageAnimation.then(() => {
+          this.gamePlay.deselectCell(index);
+          this.gamePlay.deselectCell(this.gameState.currentCharacter.position);
+          this.gameState.currentCharacter = null;
+          this.redrawPositions();
+          if (this.gameState.team.getCharactersNumber(COMPUTER) === 0) {
+            this.levelComplete();
+          } else {
+            this.setComputerAction();
+          }
+        });
+      } else {
+        GamePlay.showError('Ваш воин не может атаковать эту позицию');
+      }
+      return;
+    }
+    if (character) {
+      GamePlay.showError('Вы не можете управлять чужим воином');
+    } else {
+      GamePlay.showError('Здесь пусто. Выберите своего воина');
     }
   }
 
   onCellEnter(index) {
+    if (this.gameState.currentPlayer !== HUMAN) {
+      return;
+    }
     const [character, currentCharacter] = [
       this.gameState.team.getCharacterInCell(index),
       this.gameState.currentCharacter,
@@ -98,10 +129,17 @@ export default class GameController {
   }
 
   onCellLeave(index) {
+    if (this.gameState.currentPlayer !== HUMAN) {
+      return;
+    }
     this.gamePlay.hideCellTooltip(index);
     if (!this.gameState.team.getCharacterInCell(index, HUMAN)) {
       this.gamePlay.deselectCell(index);
     }
+  }
+
+  redrawPositions() {
+    this.gamePlay.redrawPositions(this.gameState.team.getAllCharacters());
   }
 
   newGame() {
@@ -129,7 +167,7 @@ export default class GameController {
     [HUMAN, COMPUTER].forEach((gamerType) => {
       let newCharacterNum = settings.newCharactersNum[gamerType];
       if (newCharacterNum === null) {
-        newCharacterNum = this.team.getCharactersNumber(HUMAN);
+        newCharacterNum = this.gameState.team.getCharactersNumber(HUMAN);
       }
       this.gameState.team.addNewCharacters(gamerType, generateTeam(
         settings.allowCharacterTypes[gamerType],
@@ -137,5 +175,54 @@ export default class GameController {
         newCharacterNum,
       ));
     });
+
+    this.gamePlay.drawUi(settings.theme);
+    this.redrawPositions();
+  }
+
+  setComputerAction() {
+    this.gameState.currentPlayer = COMPUTER;
+    this.gamePlay.setCursor(cursors.auto);
+    this.computerAI.setTeam(this.gameState.team);
+    const {from, to} = this.computerAI.getSolution();
+    this.gamePlay.selectCell(from);
+    setTimeout(() => { this.doComputerAction(from, to); }, 400);
+  }
+
+  doComputerAction(positionFrom, positionTo) {
+    const character = this.gameState.team.getCharacterInCell(positionFrom);
+    const target = this.gameState.team.getCharacterInCell(positionTo);
+    if (!target) {
+      character.position = positionTo;
+      this.endComputerAction(positionFrom);
+    } else {
+      const damage = this.gameState.team.attack(character, target);
+      this.gamePlay.selectCell(positionTo, 'red');
+      const damageAnimation = this.gamePlay.showDamage(positionTo, damage);
+      damageAnimation.then(() => {
+        this.gamePlay.deselectCell(positionTo);
+        this.endComputerAction(positionFrom);
+        if (this.gameState.team.getCharactersNumber(HUMAN) === 0) {
+          this.gameState.currentPlayer = COMPUTER;
+          setTimeout(() => { GamePlay.showMessage('Компьютер победил'); }, 50);
+        }
+      });
+    }
+  }
+
+  endComputerAction(oldPosition) {
+    this.gamePlay.deselectCell(oldPosition);
+    this.redrawPositions();
+    this.gameState.currentPlayer = HUMAN;
+  }
+
+  levelComplete() {
+    this.gameState.addBalls(this.gameState.team.getSumHealth(HUMAN));
+    const level = this.levels.nextLevel();
+    if (level === null) {
+      setTimeout( () => { GamePlay.showMessage('Вы выиграли'); }, 10);
+      return;
+    }
+    this.startLevel(level);
   }
 }

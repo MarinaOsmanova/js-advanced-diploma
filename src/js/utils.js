@@ -1,4 +1,4 @@
-function coordinates(index, boardSize) {
+export function coordinates(index, boardSize) {
   return [Math.floor(index / boardSize), index % boardSize];
 }
 
