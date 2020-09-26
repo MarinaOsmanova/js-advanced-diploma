@@ -38,7 +38,8 @@ export default class ComputerAI {
         return null;
       }
       const targetCharacter = target.character;
-      let rating = targetCharacter.attack * targetCharacter.attackRange + 2 * targetCharacter.moveRange;
+      let rating = targetCharacter.attack * targetCharacter.attackRange
+        + 2 * targetCharacter.moveRange;
       const effectiveDamage = targetCharacter.getDamageValueByAttack(character.character.attack);
       if (effectiveDamage >= targetCharacter.health) {
         rating = 40 * rating * targetCharacter.health;

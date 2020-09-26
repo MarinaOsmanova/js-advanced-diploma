@@ -19,14 +19,15 @@ export default class GameController {
     this.gamePlay.addCellLeaveListener((index) => { this.onCellLeave(index); });
     this.gamePlay.addCellClickListener((index) => { this.onCellClick(index); });
     this.gamePlay.addNewGameListener(() => { this.newGame(); });
+    this.gamePlay.addSaveGameListener(() => { this.saveGame(); });
+    this.gamePlay.addLoadGameListener(() => { this.loadGame(); });
 
     // load saved stated from stateService
-    try {
-      this.gameState = GameState.from(this.stateService.load());
-      this.levels.setLevelIndex(this.gameState.currentLevelIndex);
-    } catch (e) {
+    if (!this.loadGame()) {
+      this.gameState = new GameState();
       this.newGame();
     }
+    this.showBalls();
   }
 
   onCellClick(index) {
@@ -143,13 +144,8 @@ export default class GameController {
   }
 
   newGame() {
-    this.gameState = GameState.from({
-      currentBalls: 0,
-      currentPlayer: HUMAN,
-      currentLevelIndex: 0,
-      currentCharacter: null,
-      team: new Team(this.gamePlay.boardSize),
-    });
+    this.gameState.newGame();
+    this.gameState.team = new Team(this.gamePlay.boardSize);
     this.startLevel(0);
   }
 
@@ -176,6 +172,7 @@ export default class GameController {
       ));
     });
 
+    this.showBalls();
     this.gamePlay.drawUi(settings.theme);
     this.redrawPositions();
   }
@@ -184,7 +181,7 @@ export default class GameController {
     this.gameState.currentPlayer = COMPUTER;
     this.gamePlay.setCursor(cursors.auto);
     this.computerAI.setTeam(this.gameState.team);
-    const {from, to} = this.computerAI.getSolution();
+    const { from, to } = this.computerAI.getSolution();
     this.gamePlay.selectCell(from);
     setTimeout(() => { this.doComputerAction(from, to); }, 400);
   }
@@ -220,9 +217,42 @@ export default class GameController {
     this.gameState.addBalls(this.gameState.team.getSumHealth(HUMAN));
     const level = this.levels.nextLevel();
     if (level === null) {
-      setTimeout( () => { GamePlay.showMessage('Вы выиграли'); }, 10);
+      this.showBalls();
+      setTimeout(() => { GamePlay.showMessage('Вы выиграли'); }, 10);
       return;
     }
     this.startLevel(level);
+  }
+
+  saveGame() {
+    this.stateService.save(this.gameState);
+    GamePlay.showMessage('Игра записана');
+  }
+
+  loadGame() {
+    try {
+      this.gameState = GameState.from(this.stateService.load());
+      this.levels.setLevelIndex(this.gameState.currentLevelIndex);
+      const settings = this.levels.current();
+      this.gamePlay.drawUi(settings.theme);
+      this.redrawPositions();
+      this.showBalls();
+      if (this.gameState.currentCharacter !== null) {
+        this.gamePlay.selectCell(this.gameState.currentCharacter.position);
+      }
+      if (this.gameState.currentPlayer === COMPUTER
+        && this.gameState.team.getCharactersNumber(COMPUTER) > 0) {
+        this.setComputerAction();
+      }
+      return true;
+    } catch (e) {
+      GamePlay.showError('Не могу загрузить игру, но можно начать новую');
+      return false;
+    }
+  }
+
+  showBalls() {
+    GamePlay.showMaxBalls(this.gameState.maxBalls);
+    GamePlay.showCurrentBalls(this.gameState.currentBalls);
   }
 }

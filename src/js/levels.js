@@ -7,6 +7,14 @@ import Vampire from './Characters/Vampire';
 
 export const HUMAN = 0;
 export const COMPUTER = 1;
+export const CharacterClasses = {
+  bowman: Bowman,
+  daemon: Daemon,
+  magician: Magician,
+  swordsman: Swordsman,
+  undead: Undead,
+  vampire: Vampire,
+};
 
 export default class Levels {
   constructor(currentLevel = null) {

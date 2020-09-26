@@ -277,6 +277,21 @@ body {
   background-image: url('../img/emoji/level.png');
 }
 
+#rating {
+  position: absolute;
+  top: 48px;
+  left: 18px;
+  padding: 6px 10px;
+  border: 1px solid #666;
+  border-radius: 5px;
+  background-color: white;
+}
+
+#rating .balls {
+  color: #00f;
+  font-weight: bold;
+}
+
 @keyframes fade {
   from {
     opacity: 0;

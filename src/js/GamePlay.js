@@ -253,4 +253,12 @@ export default class GamePlay {
       throw new Error('GamePlay not bind to DOM');
     }
   }
+
+  static showMaxBalls(balls) {
+    document.querySelector('#rating .max-balls').innerHTML = balls;
+  }
+
+  static showCurrentBalls(balls) {
+    document.querySelector('#rating .current-balls').innerHTML = balls;
+  }
 }
