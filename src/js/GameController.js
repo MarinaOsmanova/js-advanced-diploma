@@ -23,7 +23,7 @@ export default class GameController {
     this.gamePlay.addLoadGameListener(() => { this.loadGame(); });
 
     // load saved stated from stateService
-    if (!this.loadGame()) {
+    if (!this.loadGame(true)) {
       this.gameState = new GameState();
       this.newGame();
     }
@@ -229,7 +229,7 @@ export default class GameController {
     GamePlay.showMessage('Игра записана');
   }
 
-  loadGame() {
+  loadGame(initMode = false) {
     try {
       this.gameState = GameState.from(this.stateService.load());
       this.levels.setLevelIndex(this.gameState.currentLevelIndex);
@@ -246,7 +246,9 @@ export default class GameController {
       }
       return true;
     } catch (e) {
-      GamePlay.showError('Не могу загрузить игру, но можно начать новую');
+      if (!initMode) {
+        GamePlay.showError('Не могу загрузить игру, но можно начать новую');
+      }
       return false;
     }
   }
